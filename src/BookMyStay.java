@@ -1,63 +1,46 @@
-//version 7.0
-//usecase 7:  Add-On Service Selection
+//version 8.0
+//usecase 8:  Booking History & Reporting
 import java.util.*;
 
-class AddOnService {
-    String name;
-    int cost;
+class BookingHistory {
+    private List<Reservation> history = new ArrayList<>();
 
-    public AddOnService(String name, int cost) {
-        this.name = name;
-        this.cost = cost;
+    public void add(Reservation r) {
+        history.add(r);
+    }
+
+    public List<Reservation> getAll() {
+        return history;
     }
 }
 
-class AddOnServiceManager {
-    private Map<String, List<AddOnService>> serviceMap = new HashMap<>();
+class BookingReportService {
+    public void generateReport(List<Reservation> history) {
+        System.out.println("\nBooking Report:");
 
-    public void addService(String reservationId, AddOnService service) {
-        serviceMap.putIfAbsent(reservationId, new ArrayList<>());
-        serviceMap.get(reservationId).add(service);
+        Map<String, Integer> countByType = new HashMap<>();
 
-        System.out.println("Added service: " + service.name);
-    }
-
-    public int calculateTotal(String reservationId) {
-        int total = 0;
-        List<AddOnService> services = serviceMap.get(reservationId);
-
-        if (services != null) {
-            for (AddOnService s : services) {
-                total += s.cost;
-            }
+        for (Reservation r : history) {
+            countByType.put(r.roomType,
+                    countByType.getOrDefault(r.roomType, 0) + 1);
         }
-        return total;
-    }
 
-    public void showServices(String reservationId) {
-        List<AddOnService> services = serviceMap.get(reservationId);
-
-        System.out.println("\nServices for " + reservationId + ":");
-        if (services != null) {
-            for (AddOnService s : services) {
-                System.out.println(s.name + " - " + s.cost);
-            }
+        for (String type : countByType.keySet()) {
+            System.out.println(type + " -> " + countByType.get(type));
         }
     }
 }
 
-public class UseCase7 {
+public class UseCase8 {
     public static void main(String[] args) {
-        AddOnServiceManager manager = new AddOnServiceManager();
+        BookingHistory history = new BookingHistory();
 
-        String reservationId = "R101";
+        history.add(new Reservation("Alice", "Deluxe"));
+        history.add(new Reservation("Bob", "Standard"));
+        history.add(new Reservation("Charlie", "Deluxe"));
 
-        manager.addService(reservationId, new AddOnService("Breakfast", 500));
-        manager.addService(reservationId, new AddOnService("Spa", 1500));
+        BookingReportService reportService = new BookingReportService();
 
-        manager.showServices(reservationId);
-
-        System.out.println("Total Add-on Cost: " +
-                manager.calculateTotal(reservationId));
+        reportService.generateReport(history.getAll());
     }
 }
