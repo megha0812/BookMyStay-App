@@ -1,56 +1,37 @@
-//version 3.0
-//usecase 3:  Centralized Room Inventory (HashMap)
-import java.util.HashMap;
-import java.util.Map;
+//version 4.0
+//usecase 4:  Room Search & Availability Check
+import java.util.*;
 
-class RoomInventory {
-    private Map<String, Integer> inventory;
+class SearchService {
 
-    public RoomInventory() {
-        inventory = new HashMap<>();
-git add
-        inventory.put("Single Room", 5);
-        inventory.put("Double Room", 3);
-        inventory.put("Suite Room", 2);
-    }
+    public void searchAvailableRooms(RoomInventory inventory, List<Room> rooms) {
 
-    public int getAvailability(String roomType) {
-        return inventory.getOrDefault(roomType, 0);
-    }
+        System.out.println("\n=== Available Rooms ===");
 
-    public void updateAvailability(String roomType, int change) {
-        int current = inventory.getOrDefault(roomType, 0);
-        int updated = current + change;
+        for (Room room : rooms) {
+            int available = inventory.getAvailability(room.type);
 
-        if (updated < 0) {
-            System.out.println("⚠ Cannot reduce below 0 for " + roomType);
-            return;
-        }
-
-        inventory.put(roomType, updated);
-    }
-
-    public void displayInventory() {
-        System.out.println("\n=== Inventory ===");
-        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
-            System.out.println(entry.getKey() + " -> Available: " + entry.getValue());
+            if (available > 0) {
+                room.displayDetails();
+                System.out.println("Available: " + available);
+                System.out.println("-------------------");
+            }
         }
     }
 }
 
-public class UseCase3App {
+public class UseCase4App {
     public static void main(String[] args) {
 
         RoomInventory inventory = new RoomInventory();
 
-        inventory.displayInventory();
+        List<Room> rooms = new ArrayList<>();
+        rooms.add(new SingleRoom());
+        rooms.add(new DoubleRoom());
+        rooms.add(new SuiteRoom());
 
-        // Simulate booking
-        inventory.updateAvailability("Single Room", -1);
+        SearchService searchService = new SearchService();
 
-        // Simulate cancellation
-        inventory.updateAvailability("Suite Room", +1);
-
-        inventory.displayInventory();
+        searchService.searchAvailableRooms(inventory, rooms);
     }
 }
