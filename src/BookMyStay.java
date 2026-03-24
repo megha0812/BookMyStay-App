@@ -1,44 +1,67 @@
-//version 5.0
-//usecase 5:  Booking Request Queue
+//version 6.0
+//usecase 6:  Reservation Confirmation & Room Allocation
 import java.util.*;
-class Reservation {
-    String guestName;
-    String roomType;
 
-    public Reservation(String guestName, String roomType) {
-        this.guestName = guestName;
-        this.roomType = roomType;
+class InventoryService {
+    Map<String, Integer> inventory = new HashMap<>();
+
+    public InventoryService() {
+        inventory.put("Deluxe", 2);
+        inventory.put("Standard", 2);
+    }
+
+    public boolean isAvailable(String type) {
+        return inventory.getOrDefault(type, 0) > 0;
+    }
+
+    public void reduceInventory(String type) {
+        inventory.put(type, inventory.get(type) - 1);
     }
 }
 
-class BookingRequestQueue {
-    private Queue<Reservation> queue = new LinkedList<>();
+class BookingService {
+    private Set<String> allocatedRooms = new HashSet<>();
+    private Map<String, Set<String>> roomMap = new HashMap<>();
+    private InventoryService inventory;
 
-    public void addRequest(Reservation r) {
-        queue.offer(r);
-        System.out.println("Request added for " + r.guestName);
+    public BookingService(InventoryService inventory) {
+        this.inventory = inventory;
     }
 
-    public void showQueue() {
-        System.out.println("\nBooking Queue:");
-        for (Reservation r : queue) {
-            System.out.println(r.guestName + " -> " + r.roomType);
+    public void processBooking(Queue<Reservation> queue) {
+        while (!queue.isEmpty()) {
+            Reservation r = queue.poll();
+
+            if (inventory.isAvailable(r.roomType)) {
+                String roomId = UUID.randomUUID().toString();
+
+                allocatedRooms.add(roomId);
+
+                roomMap.putIfAbsent(r.roomType, new HashSet<>());
+                roomMap.get(r.roomType).add(roomId);
+
+                inventory.reduceInventory(r.roomType);
+
+                System.out.println("Booking Confirmed for " + r.guestName +
+                        " RoomID: " + roomId);
+            } else {
+                System.out.println("No rooms available for " + r.guestName);
+            }
         }
     }
-
-    public Queue<Reservation> getQueue() {
-        return queue;
-    }
 }
 
-public class UseCase5 {
+public class UseCase6 {
     public static void main(String[] args) {
-        BookingRequestQueue queue = new BookingRequestQueue();
+        Queue<Reservation> queue = new LinkedList<>();
 
-        queue.addRequest(new Reservation("Alice", "Deluxe"));
-        queue.addRequest(new Reservation("Bob", "Standard"));
-        queue.addRequest(new Reservation("Charlie", "Suite"));
+        queue.offer(new Reservation("Alice", "Deluxe"));
+        queue.offer(new Reservation("Bob", "Deluxe"));
+        queue.offer(new Reservation("Charlie", "Deluxe"));
 
-        queue.showQueue();
+        InventoryService inventory = new InventoryService();
+        BookingService service = new BookingService(inventory);
+
+        service.processBooking(queue);
     }
 }
