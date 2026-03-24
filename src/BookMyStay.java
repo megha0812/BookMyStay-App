@@ -1,15 +1,37 @@
-//version 1.0
-//usecase 1:  Application Entry & Welcome Message
-public class HotelApp {
+//version 4.0
+//usecase 4:  Room Search & Availability Check
+import java.util.*;
 
+class SearchService {
+
+    public void searchAvailableRooms(RoomInventory inventory, List<Room> rooms) {
+
+        System.out.println("\n=== Available Rooms ===");
+
+        for (Room room : rooms) {
+            int available = inventory.getAvailability(room.type);
+
+            if (available > 0) {
+                room.displayDetails();
+                System.out.println("Available: " + available);
+                System.out.println("-------------------");
+            }
+        }
+    }
+}
+
+public class UseCase4App {
     public static void main(String[] args) {
 
-        System.out.println("=================================");
-        System.out.println(" Welcome to Hotel Booking System ");
-        System.out.println(" Version: 1.0 ");
-        System.out.println("=================================");
+        RoomInventory inventory = new RoomInventory();
 
-        System.out.println("Application started successfully.");
-        System.out.println("Application terminated.");
+        List<Room> rooms = new ArrayList<>();
+        rooms.add(new SingleRoom());
+        rooms.add(new DoubleRoom());
+        rooms.add(new SuiteRoom());
+
+        SearchService searchService = new SearchService();
+
+        searchService.searchAvailableRooms(inventory, rooms);
     }
 }
