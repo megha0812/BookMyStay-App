@@ -1,37 +1,44 @@
-//version 4.0
-//usecase 4:  Room Search & Availability Check
+//version 5.0
+//usecase 5:  Booking Request Queue
 import java.util.*;
+class Reservation {
+    String guestName;
+    String roomType;
 
-class SearchService {
-
-    public void searchAvailableRooms(RoomInventory inventory, List<Room> rooms) {
-
-        System.out.println("\n=== Available Rooms ===");
-
-        for (Room room : rooms) {
-            int available = inventory.getAvailability(room.type);
-
-            if (available > 0) {
-                room.displayDetails();
-                System.out.println("Available: " + available);
-                System.out.println("-------------------");
-            }
-        }
+    public Reservation(String guestName, String roomType) {
+        this.guestName = guestName;
+        this.roomType = roomType;
     }
 }
 
-public class UseCase4App {
+class BookingRequestQueue {
+    private Queue<Reservation> queue = new LinkedList<>();
+
+    public void addRequest(Reservation r) {
+        queue.offer(r);
+        System.out.println("Request added for " + r.guestName);
+    }
+
+    public void showQueue() {
+        System.out.println("\nBooking Queue:");
+        for (Reservation r : queue) {
+            System.out.println(r.guestName + " -> " + r.roomType);
+        }
+    }
+
+    public Queue<Reservation> getQueue() {
+        return queue;
+    }
+}
+
+public class UseCase5 {
     public static void main(String[] args) {
+        BookingRequestQueue queue = new BookingRequestQueue();
 
-        RoomInventory inventory = new RoomInventory();
+        queue.addRequest(new Reservation("Alice", "Deluxe"));
+        queue.addRequest(new Reservation("Bob", "Standard"));
+        queue.addRequest(new Reservation("Charlie", "Suite"));
 
-        List<Room> rooms = new ArrayList<>();
-        rooms.add(new SingleRoom());
-        rooms.add(new DoubleRoom());
-        rooms.add(new SuiteRoom());
-
-        SearchService searchService = new SearchService();
-
-        searchService.searchAvailableRooms(inventory, rooms);
+        queue.showQueue();
     }
 }
