@@ -1,15 +1,46 @@
-//version 1.0
-//usecase 1:  Application Entry & Welcome Message
-public class HotelApp {
+//version 8.0
+//usecase 8:  Booking History & Reporting
+import java.util.*;
 
+class BookingHistory {
+    private List<Reservation> history = new ArrayList<>();
+
+    public void add(Reservation r) {
+        history.add(r);
+    }
+
+    public List<Reservation> getAll() {
+        return history;
+    }
+}
+
+class BookingReportService {
+    public void generateReport(List<Reservation> history) {
+        System.out.println("\nBooking Report:");
+
+        Map<String, Integer> countByType = new HashMap<>();
+
+        for (Reservation r : history) {
+            countByType.put(r.roomType,
+                    countByType.getOrDefault(r.roomType, 0) + 1);
+        }
+
+        for (String type : countByType.keySet()) {
+            System.out.println(type + " -> " + countByType.get(type));
+        }
+    }
+}
+
+public class UseCase8 {
     public static void main(String[] args) {
+        BookingHistory history = new BookingHistory();
 
-        System.out.println("=================================");
-        System.out.println(" Welcome to Hotel Booking System ");
-        System.out.println(" Version: 1.0 ");
-        System.out.println("=================================");
+        history.add(new Reservation("Alice", "Deluxe"));
+        history.add(new Reservation("Bob", "Standard"));
+        history.add(new Reservation("Charlie", "Deluxe"));
 
-        System.out.println("Application started successfully.");
-        System.out.println("Application terminated.");
+        BookingReportService reportService = new BookingReportService();
+
+        reportService.generateReport(history.getAll());
     }
 }
