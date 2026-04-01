@@ -2,45 +2,45 @@
 //usecase 9:  Error Handling & Validation
 import java.util.*;
 
-class BookingHistory {
-    private List<Reservation> history = new ArrayList<>();
-
-    public void add(Reservation r) {
-        history.add(r);
-    }
-
-    public List<Reservation> getAll() {
-        return history;
+class InvalidBookingException extends Exception {
+    public InvalidBookingException(String message) {
+        super(message);
     }
 }
 
-class BookingReportService {
-    public void generateReport(List<Reservation> history) {
-        System.out.println("\nBooking Report:");
+class BookingValidator {
+    private static final Set<String> VALID_ROOMS = Set.of("STANDARD", "DELUXE");
 
-        Map<String, Integer> countByType = new HashMap<>();
-
-        for (Reservation r : history) {
-            countByType.put(r.roomType,
-                    countByType.getOrDefault(r.roomType, 0) + 1);
+    public static void validate(String roomType, int available) throws InvalidBookingException {
+        if (!VALID_ROOMS.contains(roomType)) {
+            throw new InvalidBookingException("Invalid room type: " + roomType);
         }
-
-        for (String type : countByType.keySet()) {
-            System.out.println(type + " -> " + countByType.get(type));
+        if (available <= 0) {
+            throw new InvalidBookingException("No rooms available for: " + roomType);
         }
     }
 }
 
-public class UseCase8 {
+public class UseCase9 {
+    static Map<String, Integer> inventory = new HashMap<>();
+
     public static void main(String[] args) {
-        BookingHistory history = new BookingHistory();
+        inventory.put("STANDARD", 1);
 
-        history.add(new Reservation("Alice", "Deluxe"));
-        history.add(new Reservation("Bob", "Standard"));
-        history.add(new Reservation("Charlie", "Deluxe"));
+        try {
+            book("STANDARD");
+            book("SUITE"); // invalid case
+        } catch (InvalidBookingException e) {
+            System.out.println("ERROR: " + e.getMessage());
+        }
+    }
 
-        BookingReportService reportService = new BookingReportService();
+    static void book(String type) throws InvalidBookingException {
+        int available = inventory.getOrDefault(type, 0);
 
-        reportService.generateReport(history.getAll());
+        BookingValidator.validate(type, available); // Fail-fast
+
+        inventory.put(type, available - 1);
+        System.out.println("Booking successful for " + type);
     }
 }
