@@ -1,46 +1,52 @@
-//version 9.0
-//usecase 9:  Error Handling & Validation
+//version 10.0
+//usecase 10:  Booking Cancellation & Inventory Rollback
 import java.util.*;
 
-class InvalidBookingException extends Exception {
-    public InvalidBookingException(String message) {
-        super(message);
+class BookingService {
+    private Map<String, String> bookings = new HashMap<>();
+    private Map<String, Integer> inventory = new HashMap<>();
+    private Stack<String> rollbackStack = new Stack<>();
+
+    public BookingService() {
+        inventory.put("DELUXE", 1);
+    }
+
+    public void book(String user, String roomType) {
+        if (inventory.getOrDefault(roomType, 0) <= 0) {
+            System.out.println("No rooms available");
+            return;
+        }
+
+        String roomId = roomType + "-101";
+        bookings.put(user, roomId);
+        rollbackStack.push(roomId);
+
+        inventory.put(roomType, inventory.get(roomType) - 1);
+        System.out.println("Booked: " + roomId);
+    }
+
+    public void cancel(String user) {
+        if (!bookings.containsKey(user)) {
+            System.out.println("Invalid cancellation request");
+            return;
+        }
+
+        String roomId = bookings.remove(user);
+        rollbackStack.push(roomId);
+
+        String type = roomId.split("-")[0];
+        inventory.put(type, inventory.get(type) + 1);
+
+        System.out.println("Cancelled: " + roomId);
     }
 }
 
-class BookingValidator {
-    private static final Set<String> VALID_ROOMS = Set.of("STANDARD", "DELUXE");
-
-    public static void validate(String roomType, int available) throws InvalidBookingException {
-        if (!VALID_ROOMS.contains(roomType)) {
-            throw new InvalidBookingException("Invalid room type: " + roomType);
-        }
-        if (available <= 0) {
-            throw new InvalidBookingException("No rooms available for: " + roomType);
-        }
-    }
-}
-
-public class UseCase9 {
-    static Map<String, Integer> inventory = new HashMap<>();
-
+public class UseCase10 {
     public static void main(String[] args) {
-        inventory.put("STANDARD", 1);
+        BookingService service = new BookingService();
 
-        try {
-            book("STANDARD");
-            book("SUITE"); // invalid case
-        } catch (InvalidBookingException e) {
-            System.out.println("ERROR: " + e.getMessage());
-        }
-    }
-
-    static void book(String type) throws InvalidBookingException {
-        int available = inventory.getOrDefault(type, 0);
-
-        BookingValidator.validate(type, available); // Fail-fast
-
-        inventory.put(type, available - 1);
-        System.out.println("Booking successful for " + type);
+        service.book("User1", "DELUXE");
+        service.cancel("User1");
+        service.cancel("User2"); // invalid
     }
 }
