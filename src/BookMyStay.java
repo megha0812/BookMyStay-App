@@ -1,46 +1,47 @@
-//version 8.0
-//usecase 8:  Booking History & Reporting
+//version 12.0
+//usecase 12:  Data Persistence & System Recovery
+import java.io.*;
 import java.util.*;
 
-class BookingHistory {
-    private List<Reservation> history = new ArrayList<>();
-
-    public void add(Reservation r) {
-        history.add(r);
-    }
-
-    public List<Reservation> getAll() {
-        return history;
-    }
+class HotelState implements Serializable {
+    Map<String, Integer> inventory = new HashMap<>();
 }
 
-class BookingReportService {
-    public void generateReport(List<Reservation> history) {
-        System.out.println("\nBooking Report:");
+class PersistenceService {
+    private static final String FILE = "hotel.dat";
 
-        Map<String, Integer> countByType = new HashMap<>();
-
-        for (Reservation r : history) {
-            countByType.put(r.roomType,
-                    countByType.getOrDefault(r.roomType, 0) + 1);
+    public static void save(HotelState state) {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILE))) {
+            out.writeObject(state);
+            System.out.println("State saved.");
+        } catch (IOException e) {
+            System.out.println("Save failed.");
         }
+    }
 
-        for (String type : countByType.keySet()) {
-            System.out.println(type + " -> " + countByType.get(type));
+    public static HotelState load() {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(FILE))) {
+            return (HotelState) in.readObject();
+        } catch (Exception e) {
+            System.out.println("No valid saved state. Starting fresh.");
+            return new HotelState();
         }
     }
 }
 
-public class UseCase8 {
+public class UseCase12 {
     public static void main(String[] args) {
-        BookingHistory history = new BookingHistory();
+        // Load state
+        HotelState state = PersistenceService.load();
 
-        history.add(new Reservation("Alice", "Deluxe"));
-        history.add(new Reservation("Bob", "Standard"));
-        history.add(new Reservation("Charlie", "Deluxe"));
+        // Initialize if empty
+        state.inventory.putIfAbsent("DELUXE", 2);
 
-        BookingReportService reportService = new BookingReportService();
+        // Simulate booking
+        state.inventory.put("DELUXE", state.inventory.get("DELUXE") - 1);
+        System.out.println("Booked DELUXE. Remaining: " + state.inventory.get("DELUXE"));
 
-        reportService.generateReport(history.getAll());
+        // Save state
+        PersistenceService.save(state);
     }
 }
