@@ -1,41 +1,47 @@
-//version 11.0
-//usecase 11:  Concurrent Booking Simulation (Thread Safety)
+//version 12.0
+//usecase 12:  Data Persistence & System Recovery
+import java.io.*;
 import java.util.*;
 
-class ConcurrentBooking {
-    private Map<String, Integer> inventory = new HashMap<>();
+class HotelState implements Serializable {
+    Map<String, Integer> inventory = new HashMap<>();
+}
 
-    public ConcurrentBooking() {
-        inventory.put("STANDARD", 1);
+class PersistenceService {
+    private static final String FILE = "hotel.dat";
+
+    public static void save(HotelState state) {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILE))) {
+            out.writeObject(state);
+            System.out.println("State saved.");
+        } catch (IOException e) {
+            System.out.println("Save failed.");
+        }
     }
 
-    public synchronized void book(String user) {
-        int available = inventory.get("STANDARD");
-
-        if (available <= 0) {
-            System.out.println(user + ": No rooms left");
-            return;
+    public static HotelState load() {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(FILE))) {
+            return (HotelState) in.readObject();
+        } catch (Exception e) {
+            System.out.println("No valid saved state. Starting fresh.");
+            return new HotelState();
         }
-
-        // Critical Section
-        inventory.put("STANDARD", available - 1);
-        System.out.println(user + " successfully booked");
     }
 }
 
-public class UseCase11 {
+public class UseCase12 {
     public static void main(String[] args) {
-        ConcurrentBooking system = new ConcurrentBooking();
+        // Load state
+        HotelState state = PersistenceService.load();
 
-        Runnable task = () -> {
-            String user = Thread.currentThread().getName();
-            system.book(user);
-        };
+        // Initialize if empty
+        state.inventory.putIfAbsent("DELUXE", 2);
 
-        Thread t1 = new Thread(task, "User-A");
-        Thread t2 = new Thread(task, "User-B");
+        // Simulate booking
+        state.inventory.put("DELUXE", state.inventory.get("DELUXE") - 1);
+        System.out.println("Booked DELUXE. Remaining: " + state.inventory.get("DELUXE"));
 
-        t1.start();
-        t2.start();
+        // Save state
+        PersistenceService.save(state);
     }
 }
